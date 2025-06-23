@@ -1,0 +1,31 @@
+public class BTree<K extends Comparable<K>> {
+    private static class BTreeNode<K> {
+        private int numKeys = 0;
+        private K[] keys;
+        private BTreeNode<K>[] children;
+        private boolean leaf;
+
+        @SuppressWarnings("unchecked")
+        public BTreeNode(int degree, boolean leaf) {
+            this.keys = (K[]) new Comparable[2 * degree - 1];
+            this.children = new BTreeNode[2 * degree];
+            this.leaf = leaf;
+        }
+
+        public boolean isFull() {
+            return numKeys == keys.length;
+        }
+
+        public int findKey(K key) {
+            for (int i = 0; i < numKeys; i++) {
+                if (keys[i].compareTo(key) == 0) {
+                    return i;
+                }
+                if (keys[i].compareTo(key) > 0) {
+                    return -i - 1;
+                }
+            }
+            return -numKeys - 1;
+        }
+    }
+}
