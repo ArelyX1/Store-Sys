@@ -1,7 +1,6 @@
 package com.store.demo.model;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 public class GraphLinkDir<E> {
     private List<VertexDir<E>> vertices;
@@ -19,7 +18,7 @@ public class GraphLinkDir<E> {
     public void insertEdge(E source, E destination, int weight) {
         VertexDir<E> srcVertex = searchVertex(source);
         VertexDir<E> destVertex = searchVertex(destination);
-        
+
         if (srcVertex != null && destVertex != null) {
             srcVertex.addEdge(destVertex, weight);
         }
@@ -49,73 +48,76 @@ public class GraphLinkDir<E> {
     public void removeEdge(E source, E destination) {
         VertexDir<E> srcVertex = searchVertex(source);
         VertexDir<E> destVertex = searchVertex(destination);
-        
+
         if (srcVertex != null && destVertex != null) {
             srcVertex.removeEdge(destVertex);
         }
     }
 
-    public int outDegree(E data) {
-        VertexDir<E> vertex = searchVertex(data);
-        return vertex != null ? vertex.getAdjacencyList().size() : -1;
-    }
+    // DIJKSTRA
+    public Map<E, Integer> dijkstra(E start) {
+        Map<E, Integer> distances = new HashMap<>();
+        Set<E> visited = new HashSet<>();
+        PriorityQueue<Pair<E, Integer>> pq = new PriorityQueue<>(Comparator.comparingInt(Pair::getValue));
 
-    public int inDegree(E data) {
-        VertexDir<E> targetVertex = searchVertex(data);
-        if (targetVertex == null) return -1;
+        for (VertexDir<E> v : vertices) {
+            distances.put(v.getData(), Integer.MAX_VALUE);
+        }
+        distances.put(start, 0);
+        pq.add(new Pair<>(start, 0));
 
-        int count = 0;
-        for (VertexDir<E> vertex : vertices) {
-            for (EdgeDir<E> edge : vertex.getAdjacencyList()) {
-                if (edge.getDestination().equals(targetVertex)) {
-                    count++;
+        while (!pq.isEmpty()) {
+            Pair<E, Integer> current = pq.poll();
+            E node = current.getKey();
+            if (visited.contains(node)) continue;
+            visited.add(node);
+
+            VertexDir<E> vNode = searchVertex(node);
+            if (vNode == null) continue;
+
+            for (EdgeDir<E> edge : vNode.getAdjacencyList()) {
+                E neighbor = edge.getRefDest().getData();
+                int weight = edge.getWeight();
+                int newDist = distances.get(node) + weight;
+                if (newDist < distances.get(neighbor)) {
+                    distances.put(neighbor, newDist);
+                    pq.add(new Pair<>(neighbor, newDist));
                 }
             }
         }
-        return count;
-    }
-
-    public int getEdgeWeight(E source, E destination) {
-        VertexDir<E> srcVertex = searchVertex(source);
-        VertexDir<E> destVertex = searchVertex(destination);
-        
-        if (srcVertex != null && destVertex != null) {
-            for (EdgeDir<E> edge : srcVertex.getAdjacencyList()) {
-                if (edge.getDestination().equals(destVertex)) {
-                    return edge.getWeight();
-                }
-            }
-        }
-        return -1; // No existe la arista
+        return distances;
     }
 
     public List<VertexDir<E>> getVertices() {
         return vertices;
     }
 
-    public boolean isEmpty() {
-        return vertices.isEmpty();
-    }
-
-    public int getVertexCount() {
-        return vertices.size();
-    }
-
-    public int getEdgeCount() {
-        int count = 0;
-        for (VertexDir<E> vertex : vertices) {
-            count += vertex.getAdjacencyList().size();
+    // Para visualización con vis-network
+    public Map<String, Object> visualGraph() {
+        List<Map<String, Object>> nodes = new ArrayList<>();
+        List<Map<String, Object>> edges = new ArrayList<>();
+        for (VertexDir<E> v : vertices) {
+            nodes.add(Map.of("id", v.getData(), "label", v.getData()));
+            for (EdgeDir<E> e : v.getAdjacencyList()) {
+                edges.add(Map.of(
+                    "from", v.getData(),
+                    "to", e.getRefDest().getData(),
+                    "label", String.valueOf(e.getWeight())
+                ));
+            }
         }
-        return count;
+        Map<String, Object> result = new HashMap<>();
+        result.put("nodes", nodes);
+        result.put("edges", edges);
+        return result;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Grafo Dirigido Ponderado:\n");
-        for (VertexDir<E> vertex : vertices) {
-            sb.append(vertex.toString()).append("\n");
-        }
-        return sb.toString();
+    // Clase auxiliar para Dijkstra
+    private static class Pair<K, V> {
+        private final K key;
+        private final V value;
+        public Pair(K key, V value) { this.key = key; this.value = value; }
+        public K getKey() { return key; }
+        public V getValue() { return value; }
     }
 }

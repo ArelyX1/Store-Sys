@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Grafo Dirigido Ponderado Visual</title>
+  <link href="https://unpkg.com/vis-network/styles/vis-network.min.css" rel="stylesheet" type="text/css" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 30px; }
+    input { margin: 2px; }
+    button { margin: 2px 0; }
+    #grafo { width: 800px; height: 500px; border: 1px solid #ccc; margin-top: 20px; }
+    .form-section { margin-bottom: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 7px; background: #f9f9f9;}
+    .result { margin: 12px 0; padding: 8px; background: #eef; border-radius: 5px;}
+  </style>
+</head>
+<body>
+  <h1>Grafo Dirigido Ponderado</h1>
+
+  <div class="form-section">
+    <h3>Agregar vértice</h3>
+    <input type="text" id="inputVertice" placeholder="Nombre del vértice">
+    <button onclick="agregarVertice()">Agregar vértice</button>
+  </div>
+
+  <div class="form-section">
+    <h3>Agregar arista</h3>
+    <input type="text" id="inputOrigen" placeholder="Origen">
+    <input type="text" id="inputDestino" placeholder="Destino">
+    <input type="number" id="inputPeso" placeholder="Peso">
+    <button onclick="agregarArista()">Agregar arista</button>
+  </div>
+
+  <div class="form-section">
+    <h3>Eliminar vértice</h3>
+    <input type="text" id="inputEliminarVertice" placeholder="Nombre del vértice">
+    <button onclick="eliminarVertice()">Eliminar vértice</button>
+  </div>
+
+  <div class="form-section">
+    <h3>Eliminar arista</h3>
+    <input type="text" id="inputEliminarOrigen" placeholder="Origen">
+    <input type="text" id="inputEliminarDestino" placeholder="Destino">
+    <button onclick="eliminarArista()">Eliminar arista</button>
+  </div>
+
+  <div class="form-section">
+    <h3>Algoritmos</h3>
+    <input type="text" id="inputAlgStart" placeholder="Inicio">
+    <button onclick="getDijkstra()">Dijkstra</button>
+    <div id="algResult" class="result"></div>
+  </div>
+
+  <button onclick="mostrarGrafo()">Mostrar grafo</button>
+  <div id="grafo"></div>
+
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <script src="grafo.js"></script>
+</body>
+</html>

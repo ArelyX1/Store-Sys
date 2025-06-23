@@ -32,7 +32,7 @@ public class VertexDir<E> {
     }
 
     public void removeEdge(VertexDir<E> destination) {
-        adjacencyList.removeIf(edge -> edge.getDestination().equals(destination));
+        adjacencyList.removeIf(edge -> edge.getRefDest().equals(destination));
     }
 
     @Override
