@@ -1,74 +1,109 @@
 package com.store.demo.controller;
 
-import com.store.demo.model.Vertex;
-import com.store.demo.model.Edge;
+import com.store.demo.model.EdgeDTO;
+import com.store.demo.model.VertexDTO;
 import com.store.demo.service.GraphService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
-// Controlador REST para el grafo
 @RestController
 @RequestMapping("/api/grafo")
 public class GraphController {
 
-    private final GraphService graphService;
-
     @Autowired
-    public GraphController(GraphService graphService) {
-        this.graphService = graphService;
-    }
+    private GraphService graphService;
 
-    // Agregar un vértice
-    @PostMapping("/vertex")
-    public Vertex addVertex(@RequestBody VertexDTO vertexDTO) {
-        return graphService.addVertex(vertexDTO.getId());
-    }
-
-    // Listar todos los vértices
+    // GET - Obtener todos los vértices
     @GetMapping("/vertices")
-    public List<Vertex> getVertices() {
-        return graphService.getVertices();
+    public List<String> obtenerVertices() {
+        return graphService.obtenerVertices();
     }
 
-    // Agregar una arista
-    @PostMapping("/edge")
-    public void addEdge(@RequestBody EdgeDTO edgeDTO) {
-        graphService.addEdge(edgeDTO.getSource(), edgeDTO.getDestination(), edgeDTO.getWeight());
+    // GET - Mostrar grafo completo
+    @GetMapping
+    public String mostrarGrafo() {
+        return graphService.mostrarGrafo();
     }
 
-    // Listar todas las aristas
-    @GetMapping("/edges")
-    public List<Edge> getEdges() {
-        return graphService.getEdges();
+    // GET - Obtener peso de una arista
+    @GetMapping("/aristas/peso")
+    public ResponseEntity<Integer> obtenerPesoArista(@RequestParam String source, @RequestParam String destination) {
+        int weight = graphService.obtenerPesoArista(source, destination);
+        if (weight == -1) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(weight);
     }
 
-    // Listar aristas salientes de un vértice
-    @GetMapping("/edges/from/{sourceId}")
-    public List<Edge> getEdgesFrom(@PathVariable String sourceId) {
-        return graphService.getEdgesFrom(sourceId);
+    // GET - Obtener grado de salida
+    @GetMapping("/vertices/{data}/grado-salida")
+    public ResponseEntity<Integer> obtenerGradoSalida(@PathVariable String data) {
+        int degree = graphService.obtenerGradoSalida(data);
+        if (degree == -1) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(degree);
     }
 
-    // DTOs para recibir datos en POST
-    public static class VertexDTO {
-        private String id;
-        public String getId() { return id; }
-        public void setId(String id) { this.id = id; }
+    // GET - Obtener grado de entrada
+    @GetMapping("/vertices/{data}/grado-entrada")
+    public ResponseEntity<Integer> obtenerGradoEntrada(@PathVariable String data) {
+        int degree = graphService.obtenerGradoEntrada(data);
+        if (degree == -1) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(degree);
     }
 
-    public static class EdgeDTO {
-        private String source;
-        private String destination;
-        private double weight;
-
-        public String getSource() { return source; }
-        public void setSource(String source) { this.source = source; }
-
-        public String getDestination() { return destination; }
-        public void setDestination(String destination) { this.destination = destination; }
-
-        public double getWeight() { return weight; }
-        public void setWeight(double weight) { this.weight = weight; }
+    // POST - Agregar vértice
+    @PostMapping("/vertices")
+    public ResponseEntity<Void> agregarVertice(@RequestBody VertexDTO vertexDTO) {
+        graphService.agregarVertice(vertexDTO.getData());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+    // POST - Agregar arista con peso
+    @PostMapping("/aristas")
+    public ResponseEntity<Void> agregarArista(@RequestBody EdgeDTO edgeDTO) {
+        graphService.agregarArista(edgeDTO.getSource(), edgeDTO.getDestination(), edgeDTO.getWeight());
+        return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    // PUT - Actualizar vértice
+    @PutMapping("/vertices/{oldData}")
+    public ResponseEntity<Void> actualizarVertice(@PathVariable String oldData, @RequestBody VertexDTO vertexDTO) {
+        graphService.actualizarVertice(oldData, vertexDTO.getData());
+        return ResponseEntity.ok().build();
+    }
+
+    // PUT - Actualizar peso de arista
+    @PutMapping("/aristas/peso")
+    public ResponseEntity<Void> actualizarPesoArista(@RequestBody EdgeDTO edgeDTO) {
+        graphService.actualizarPesoArista(edgeDTO.getSource(), edgeDTO.getDestination(), edgeDTO.getWeight());
+        return ResponseEntity.ok().build();
+    }
+
+    // DELETE - Eliminar vértice
+    @DeleteMapping("/vertices/{data}")
+    public ResponseEntity<Void> eliminarVertice(@PathVariable String data) {
+        graphService.eliminarVertice(data);
+        return ResponseEntity.noContent().build();
+    }
+
+    // DELETE - Eliminar arista
+    @DeleteMapping("/aristas")
+    public ResponseEntity<Void> eliminarArista(@RequestBody EdgeDTO edgeDTO) {
+        graphService.eliminarArista(edgeDTO.getSource(), edgeDTO.getDestination());
+        return ResponseEntity.noContent().build();
+    }
+    @GetMapping("/json")
+    public List<Map<String, Object>> obtenerGrafoJson() {
+        return graphService.obtenerGrafoComoJson();
+}
+
 }

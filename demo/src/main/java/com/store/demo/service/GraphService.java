@@ -1,48 +1,94 @@
 package com.store.demo.service;
 
-import com.store.demo.model.Vertex;
-import com.store.demo.model.Edge;
+import com.store.demo.model.GraphLinkDir;
+import com.store.demo.model.VertexDir;
+import com.store.demo.model.EdgeDir;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class GraphService {
-    private final Map<String, Vertex> vertices = new HashMap<>();
-    private final List<Edge> edges = new ArrayList<>();
+    private final GraphLinkDir<String> graph = new GraphLinkDir<>();
 
-    // Agregar un vértice (si no existe)
-    public Vertex addVertex(String id) {
-        return vertices.computeIfAbsent(id, Vertex::new);
+    public List<String> obtenerVertices() {
+        return graph.getVertices().stream()
+                .map(VertexDir::getData)
+                .collect(Collectors.toList());
     }
 
-    // Obtener todos los vértices
-    public List<Vertex> getVertices() {
-        return new ArrayList<>(vertices.values());
+    public void agregarVertice(String data) {
+        graph.insertVertex(data);
     }
 
-    // Agregar una arista dirigida y ponderada
-    public void addEdge(String sourceId, String destinationId, double weight) {
-        Vertex source = addVertex(sourceId);
-        Vertex destination = addVertex(destinationId);
-        edges.add(new Edge(source, destination, weight));
+    public void agregarArista(String source, String destination, int weight) {
+        graph.insertEdge(source, destination, weight);
     }
 
-    // Obtener todas las aristas
-    public List<Edge> getEdges() {
-        return new ArrayList<>(edges);
+    public void eliminarVertice(String data) {
+        graph.removeVertex(data);
     }
 
-    // Obtener aristas salientes desde un vértice
-    public List<Edge> getEdgesFrom(String sourceId) {
-        Vertex source = vertices.get(sourceId);
-        if (source == null) return Collections.emptyList();
-        List<Edge> result = new ArrayList<>();
-        for (Edge edge : edges) {
-            if (edge.getSource().equals(source)) {
-                result.add(edge);
+    public void eliminarArista(String source, String destination) {
+        graph.removeEdge(source, destination);
+    }
+
+    public void actualizarVertice(String oldData, String newData) {
+        VertexDir<String> vertex = graph.searchVertex(oldData);
+        if (vertex != null) {
+            vertex.setData(newData);
+        }
+    }
+
+    public void actualizarPesoArista(String source, String destination, int newWeight) {
+        VertexDir<String> srcVertex = graph.searchVertex(source);
+        VertexDir<String> destVertex = graph.searchVertex(destination);
+        
+        if (srcVertex != null && destVertex != null) {
+            for (EdgeDir<String> edge : srcVertex.getAdjacencyList()) {
+                if (edge.getDestination().equals(destVertex)) {
+                    edge.setWeight(newWeight);
+                    break;
+                }
             }
         }
-        return result;
     }
+
+    public int obtenerPesoArista(String source, String destination) {
+        return graph.getEdgeWeight(source, destination);
+    }
+
+    public String mostrarGrafo() {
+        return graph.toString();
+    }
+
+    public int obtenerGradoSalida(String data) {
+        return graph.outDegree(data);
+    }
+
+    public int obtenerGradoEntrada(String data) {
+        return graph.inDegree(data);
+    }
+    public List<Map<String, Object>> obtenerGrafoComoJson() {
+    List<Map<String, Object>> grafoJson = new ArrayList<>();
+    for (VertexDir<String> vertex : graph.getVertices()) {
+        Map<String, Object> verticeMap = new HashMap<>();
+        verticeMap.put("vertex", vertex.getData());
+        List<Map<String, Object>> edgesList = new ArrayList<>();
+        for (EdgeDir<String> edge : vertex.getAdjacencyList()) {
+            Map<String, Object> edgeMap = new HashMap<>();
+            edgeMap.put("destination", edge.getDestination().getData());
+            edgeMap.put("weight", edge.getWeight());
+            edgesList.add(edgeMap);
+        }
+        verticeMap.put("edges", edgesList);
+        grafoJson.add(verticeMap);
+    }
+    return grafoJson;
+}
+
 }
