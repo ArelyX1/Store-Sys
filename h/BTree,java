@@ -28,4 +28,123 @@ public class BTree<K extends Comparable<K>> {
             return -numKeys - 1;
         }
     }
+
+    private BTreeNode<K> root;
+    private final int degree;
+
+    public BTree(int degree) {
+        if (degree < 2) {
+            throw new IllegalArgumentException("Degree must be at least 2");
+        }
+        this.degree = degree;
+        this.root = new BTreeNode<>(degree, true);
+    }
+
+    public void insert(K key) {
+        if (root.isFull()) {
+            BTreeNode<K> newRoot = new BTreeNode<>(degree, false);
+            newRoot.children[0] = root;
+            splitChild(newRoot, 0);
+            root = newRoot;
+        }
+        insertNonFull(root, key);
+    }
+
+    private void insertNonFull(BTreeNode<K> node, K key) {
+        int i = node.numKeys - 1;
+        
+        if (node.leaf) {
+            while (i >= 0 && key.compareTo(node.keys[i]) < 0) {
+                node.keys[i + 1] = node.keys[i];
+                i--;
+            }
+            node.keys[i + 1] = key;
+            node.numKeys++;
+        } else {
+            while (i >= 0 && key.compareTo(node.keys[i]) < 0) {
+                i--;
+            }
+            i++;
+            
+            if (node.children[i].isFull()) {
+                splitChild(node, i);
+                if (key.compareTo(node.keys[i]) > 0) {
+                    i++;
+                }
+            }
+            insertNonFull(node.children[i], key);
+        }
+    }
+
+    private void splitChild(BTreeNode<K> parent, int childIndex) {
+        BTreeNode<K> child = parent.children[childIndex];
+        BTreeNode<K> newChild = new BTreeNode<>(degree, child.leaf);
+        
+        // Move keys to new child
+        for (int j = 0; j < degree - 1; j++) {
+            newChild.keys[j] = child.keys[j + degree];
+        }
+        newChild.numKeys = degree - 1;
+        
+        // Move children if not leaf
+        if (!child.leaf) {
+            for (int j = 0; j < degree; j++) {
+                newChild.children[j] = child.children[j + degree];
+            }
+        }
+        child.numKeys = degree - 1;
+        
+        // Make space in parent for new key and child
+        for (int j = parent.numKeys; j > childIndex; j--) {
+            parent.children[j + 1] = parent.children[j];
+            parent.keys[j] = parent.keys[j - 1];
+        }
+        
+        // Move median key to parent
+        parent.keys[childIndex] = child.keys[degree - 1];
+        parent.children[childIndex + 1] = newChild;
+        parent.numKeys++;
+    }
+
+    public boolean search(K key) {
+        return search(root, key);
+    }
+
+    private boolean search(BTreeNode<K> node, K key) {
+        int i = 0;
+        while (i < node.numKeys && key.compareTo(node.keys[i]) > 0) {
+            i++;
+        }
+        
+        if (i < node.numKeys && key.compareTo(node.keys[i]) == 0) {
+            return true;
+        }
+        
+        if (node.leaf) {
+            return false;
+        }
+        
+        return search(node.children[i], key);
+    }
+
+    public void traverse() {
+        traverse(root);
+        System.out.println();
+    }
+
+    private void traverse(BTreeNode<K> node) {
+        int i;
+        for (i = 0; i < node.numKeys; i++) {
+            if (!node.leaf) {
+                traverse(node.children[i]);
+            }
+            System.out.print(node.keys[i] + " ");
+        }
+        
+        if (!node.leaf) {
+            traverse(node.children[i]);
+        }
+    }
+
+
 }
